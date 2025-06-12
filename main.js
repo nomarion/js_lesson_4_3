@@ -58,7 +58,7 @@ const handler = () => {
 const getYearAndValidator = () => {
     const year = prompt(ANSWER_YEAR);
     if (!exitCheck(year, EXIT_YEAR)) {
-        const yearInt = parseInt(year);
+        const yearInt = Number(year);
         if (!isNaN(yearInt)) {
             if (yearInt >= MIN_YEAR && yearInt <= MAX_YEAR) {
                 return yearInt;
