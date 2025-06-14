@@ -1,105 +1,93 @@
-import {ExitException} from "./exit-exception.js";
-
 'use strict';
 
 const MIN_YEAR = 1900;
 const MAX_YEAR = 2025;
-const MIN_MAX_YEAR_TEXT = `Год рождения должен быть от ${MIN_YEAR} до ${MAX_YEAR}`;
-const CITY = ['Киев', 'Вашингтон', 'Лондон'];
-const ANSWER_YEAR = 'Ваш год рождения?';
-const ANSWER_CITY = 'Укажите ваш город проживания?'
-const ANSWER_SPORT = 'Укажите ваш любимый вид спорта?'
-const EXIT_YEAR = 'Жалко год рождения указать? Ладно. Пока)'
-const EXIT_CITY = 'Жалко город указать? Ладно. Пока)'
-const EXIT_SPORT = 'Жалко вид спорта указать? Ладно. Пока)'
+const MIN_MAX_YEAR_ERROR_MESSAGE = `Год рождения должен быть от ${MIN_YEAR} до ${MAX_YEAR}`;
+const QUESTION_YEAR_MESSAGE = 'Ваш год рождения?';
+const QUESTION_CITY_MESSAGE = 'Укажите ваш город проживания?'
+const QUESTION_SPORT_MESSAGE = 'Укажите ваш любимый вид спорта?'
+const EXIT_YEAR_MESSAGE = 'Жалко год рождения указать? Ладно. Пока)'
+const EXIT_CITY_MESSAGE = 'Жалко город указать? Ладно. Пока)'
+const EXIT_SPORT_MESSAGE = 'Жалко вид спорта указать? Ладно. Пока)'
 const NUMBER_ERROR = 'Укажите число!'
-const STRING_ERROR = 'Укажите строку! Только кириллические символы!'
-const EXISTS_CITY = 'Ты живешь в столице: '
-const NOT_EXISTS_CITY = 'Ты живешь в: '
-const AGE = 'Твой возраст: '
-const SPORT_ANSWER = 'Круто! Хочешь стать '
-const sportMap = new Map();
+const CITY_VALIDATION_ERROR_MESSAGE = 'Укажите строку! Только кириллические символы! От 3 символов!'
+const SPORT_VALIDATION_ERROR_MESSAGE = 'Укажите строку! От 2 символов!'
 
-/*
----------
-| Не ругайте, выполняю логику только когда переданы все данные от юзера, а не после каждого нажатия ОК.
-| Если критично, могу переделать =)
-| Дополнительные задания включены.
----------
-*/
+const SPORT_LIST_OBJECT = {'Футбол': 'Месси', 'Тенис': 'Шараповой', 'ММА': 'Макгрегором'};
+const CAPITAL_ARRAY = ['Киев', 'Вашингтон', 'Лондон'];
+const CITY_STRING_CHECK_REG = /^[А-Яа-яËё]{3,}$/;
+const SPORT_STRING_CHECK_REG = /^[A-Za-zА-Яа-яËё]{2,}$/;
+const CAPITAL_CITY_ANSWER_MESSAGE = (city) => `Ты живешь в столице, город ${city}`;
+const CITY_ANSWER_MESSAGE = (city) => `Ты живешь в городе ${city}`
+const AGE_ANSWER_MESSAGE = (age) => `Твой возраст: ${age}`
+const SPORT_ANSWER_MESSAGE = (value) => `Круто! Хочешь стать ${value}`
 
-const handler = () => {
-    sportMap.set('Футбол', 'Месси');
-    sportMap.set('Тенис', 'Шараповой');
-    sportMap.set('ММА', 'Макгрегором');
+const getUserProfile = () => {
 
-    const year = getYearAndValidator();
-    const city = inputStringValidator(ANSWER_CITY, EXIT_CITY);
-    const sport = inputStringValidator(ANSWER_SPORT, EXIT_SPORT);
-
-    if (year && city && sport) {
-        // Формируем строку по спортику, если он есть в мапе
-        const sportUpper = sport.charAt(0).toUpperCase() + sport.slice(1);
-        let sportString = '';
-        if (sportMap.has(sportUpper)) {
-            sportString = '\n' + SPORT_ANSWER + sportMap.get(sportUpper) + '?';
+    // Год
+    let year = prompt(QUESTION_YEAR_MESSAGE);
+    if (!exitCheck(year, EXIT_YEAR_MESSAGE)) {
+        year = Number(year);
+        if(yearValidator(year)) {
+            // Год валидный, выводим окно
+            alert(AGE_ANSWER_MESSAGE(new Date().getFullYear() - year));
         }
-        // Проверка на столицу
-        const cityUpper = city.charAt(0).toUpperCase() + city.slice(1);
-        if (CITY.indexOf(cityUpper) > -1) {
-            alert(EXISTS_CITY + cityUpper + '\n' + AGE + (new Date().getFullYear() - year) + sportString);
-            return;
+    }
+    // Город
+    let city = prompt(QUESTION_CITY_MESSAGE);
+    if (!exitCheck(city, EXIT_CITY_MESSAGE)) {
+        city = city.trim().charAt(0).toUpperCase() + city.slice(1);
+        if(CITY_STRING_CHECK_REG.test(city)) {
+            // Город валидный, проверяем на столицу
+            if(CAPITAL_ARRAY.indexOf(city) > -1) {
+                // Найдена столица
+                alert(CAPITAL_CITY_ANSWER_MESSAGE(city));
+            } else {
+                // Обычный город
+                alert(CITY_ANSWER_MESSAGE(city));
+            }
+        } else {
+            alert(CITY_VALIDATION_ERROR_MESSAGE);
         }
-        alert(NOT_EXISTS_CITY + cityUpper + '\n' + AGE + (new Date().getFullYear() - year) + sportString);
+
+    }
+    // Спорт
+    let sport = prompt(QUESTION_SPORT_MESSAGE);
+    if (!exitCheck(sport, EXIT_SPORT_MESSAGE)) {
+        sport = sport.trim().charAt(0).toUpperCase() + sport.slice(1);
+        if(SPORT_STRING_CHECK_REG.test(sport)) {
+            // Город валидный, проверяем на столицу
+            if(sport in SPORT_LIST_OBJECT) {
+                // Найден вид спорта
+                alert(SPORT_ANSWER_MESSAGE(SPORT_LIST_OBJECT[sport]));
+            }
+            // не вывожу что указал юзер, в ДЗ не указано
+        } else {
+            alert(SPORT_VALIDATION_ERROR_MESSAGE);
+
+        }
     }
 };
 
-// Получение и валидация года рождения
-const getYearAndValidator = () => {
-    const year = prompt(ANSWER_YEAR);
-    if (!exitCheck(year, EXIT_YEAR)) {
-        const yearInt = Number(year);
-        if (!isNaN(yearInt)) {
-            if (yearInt >= MIN_YEAR && yearInt <= MAX_YEAR) {
-                return yearInt;
-            }
-            alert(MIN_MAX_YEAR_TEXT)
-            return getYearAndValidator();
+// Валидация года рождения
+const yearValidator = (year) => {
+    if (Number.isInteger(year)) {
+        if (year >= MIN_YEAR && year <= MAX_YEAR) {
+            return true;
         }
-        alert(NUMBER_ERROR);
-        return getYearAndValidator();
+        alert(MIN_MAX_YEAR_ERROR_MESSAGE)
+        return false;
     }
+    alert(NUMBER_ERROR);
     return false;
 }
 
-// Получение строкового значения от пользователя, валидация
-const inputStringValidator = (value, message) => {
-    const item = prompt(value);
-    if (!exitCheck(item, message)) {
-        if (item.trim() && stringCheck(item.trim())) {
-            return item;
-        }
-        alert(STRING_ERROR);
-        return inputStringValidator(value);
-    }
-    return false;
-}
-
-////////////////////////////////////// Utils
-
-const exitCheck = (value, message) => {
-    if (value === null) {
+const exitCheck = (item, message) => {
+    if (item === null) {
         alert(message);
-        throw new ExitException(message);
+        return true;
     }
     return false;
 }
 
-const stringCheck = (value) => {
-    return /[а-яА-ЯёË]/.test(value);
-
-}
-
-////////////////////////////////////// Run
-
-handler();
+getUserProfile();
